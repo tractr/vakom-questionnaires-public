@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Générateur de liens — Questionnaires VAKOM</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f4f2;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      padding: 40px;
+      width: 100%;
+      max-width: 580px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: -14px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #1a1a1a;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 20px;
+      background: #fafafa;
+    }
+
+    input[type="text"]:focus {
+      border-color: #7c0e73;
+      background: #fff;
+    }
+
+    .form-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid #ddd;
+      background: #fafafa;
+      color: #555;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .badge.active {
+      background: #7c0e73;
+      border-color: #7c0e73;
+      color: #fff;
+    }
+
+    .badge:hover:not(.active) {
+      border-color: #7c0e73;
+      color: #7c0e73;
+    }
+
+    .generate-btn {
+      width: 100%;
+      padding: 13px;
+      background: #7c0e73;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+
+    .generate-btn:hover { background: #650c5e; }
+
+    .result {
+      margin-top: 28px;
+      display: none;
+    }
+
+    .result-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 8px;
+    }
+
+    .result-box {
+      background: #f5f4f2;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .result-url {
+      font-size: 12px;
+      color: #555;
+      word-break: break-all;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      font-family: "Courier New", monospace;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-copy {
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    .btn-copy:hover { background: #333; }
+    .btn-copy.copied { background: #2a7a3a; }
+
+    .btn-open {
+      background: #7c0e73;
+      color: #fff;
+    }
+
+    .btn-open:hover { background: #650c5e; }
+
+    .qr-section {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e8e8e8;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .qr-section img {
+      width: 100px;
+      height: 100px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .qr-meta {
+      flex: 1;
+    }
+
+    .qr-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 8px;
+    }
+
+    .btn-download {
+      padding: 8px 14px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-download:hover { background: #e0e0e0; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 28px 0;
+    }
+
+    .info {
+      font-size: 12px;
+      color: #999;
+      line-height: 1.7;
+    }
+
+    .info strong {
+      color: #666;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Générateur de liens — Questionnaires VAKOM</h1>
+    <p class="subtitle">Sélectionnez le questionnaire, remplissez les informations de la session, et générez le lien à diffuser.</p>
+
+    <label>Questionnaire</label>
+    <div class="form-badges">
+      <span class="badge active" data-form="EkVLLB" onclick="selectForm(this)">Satisfaction à chaud</span>
+      <span class="badge" data-form="aQJ0ZB" onclick="selectForm(this)">Bilan à froid — Collaborateur</span>
+      <span class="badge" data-form="7R0o4Z" onclick="selectForm(this)">Bilan à froid — Manager</span>
+    </div>
+
+    <label for="numero_session">Numéro de session</label>
+    <input type="text" id="numero_session" placeholder="Ex : 2026-09-DISCAC-MGT" />
+    <p class="hint">C'est lui qui relie les réponses aux rapports. Utilisez le même numéro pour la satisfaction et les bilans à froid d'une même session.</p>
+
+    <label for="nom_formation">Nom de la formation</label>
+    <input type="text" id="nom_formation" placeholder="Ex : Encadrer, manager une équipe" />
+
+    <label for="date_formation">Date(s) de la formation</label>
+    <input type="text" id="date_formation" placeholder="Ex : 12 mai 2026 ou 12-13 mai 2026" />
+    <p class="hint">Texte libre, plusieurs jours possibles.</p>
+
+    <label for="formateur">Formateur / Consultant</label>
+    <input type="text" id="formateur" placeholder="Ex : Julie Prak" />
+
+    <label for="lieu_formation">Lieu de la formation</label>
+    <input type="text" id="lieu_formation" placeholder="Ex : Le Haillan ou Distanciel" />
+
+    <button class="generate-btn" onclick="generer()">Générer le lien</button>
+
+    <div class="result" id="result">
+      <p class="result-label">Lien à diffuser</p>
+      <div class="result-box">
+        <p class="result-url" id="url-display"></p>
+        <div class="result-actions">
+          <button class="action-btn btn-copy" id="copy-btn" onclick="copier()">Copier le lien</button>
+          <button class="action-btn btn-open" onclick="ouvrir()">Ouvrir pour tester</button>
+        </div>
+        <div class="qr-section">
+          <img id="qr-img" src="" alt="QR code" />
+          <div class="qr-meta">
+            <p class="qr-label">QR code — à glisser dans une présentation ou à projeter en fin de session</p>
+            <button class="btn-download" onclick="telechargerQR()">Télécharger en PNG</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <p class="info">
+      <strong>Comment ça fonctionne :</strong> les informations de la session sont transmises automatiquement au questionnaire par le lien. Le répondant ne les voit pas et n'a rien à saisir, elles arrivent avec ses réponses dans Tally.<br><br>
+      <strong>Attention :</strong> si vous ouvrez le lien pour le tester, ne validez pas le questionnaire jusqu'au bout, sinon une fausse réponse sera enregistrée.
+    </p>
+  </div>
+
+  <script>
+    const FORMS = {
+      EkVLLB: "Satisfaction à chaud",
+      aQJ0ZB: "Bilan à froid — Collaborateur",
+      "7R0o4Z": "Bilan à froid — Manager"
+    };
+
+    let selectedForm = "EkVLLB";
+    let generatedUrl = "";
+
+    function selectForm(el) {
+      document.querySelectorAll(".badge").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
+      selectedForm = el.dataset.form;
+      document.getElementById("result").style.display = "none";
+      generatedUrl = "";
+    }
+
+    function generer() {
+      const numero = document.getElementById("numero_session").value.trim();
+      const nom = document.getElementById("nom_formation").value.trim();
+      const date = document.getElementById("date_formation").value.trim();
+      const formateur = document.getElementById("formateur").value.trim();
+      const lieu = document.getElementById("lieu_formation").value.trim();
+
+      if (!numero || !nom || !date || !formateur || !lieu) {
+        alert("Merci de remplir les 5 champs avant de générer le lien.");
+        return;
+      }
+
+      const params = new URLSearchParams({
+        numero_session: numero,
+        nom_formation: nom,
+        date_formation: date,
+        formateur: formateur,
+        lieu_formation: lieu
+      });
+
+      generatedUrl = `https://tally.so/r/${selectedForm}?${params.toString()}`;
+
+      document.getElementById("url-display").textContent = generatedUrl;
+      document.getElementById("result").style.display = "block";
+
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(generatedUrl)}`;
+      document.getElementById("qr-img").src = qrUrl;
+      window._qrUrl = qrUrl;
+      window._qrFilename = `qr-vakom-${selectedForm}-${numero.replace(/[^a-zA-Z0-9-]/g, "_")}.png`;
+
+      const copyBtn = document.getElementById("copy-btn");
+      copyBtn.textContent = "Copier le lien";
+      copyBtn.classList.remove("copied");
+    }
+
+    function copier() {
+      if (!generatedUrl) return;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(generatedUrl).then(() => {
+          confirmerCopie();
+        }).catch(() => {
+          copierFallback();
+        });
+      } else {
+        copierFallback();
+      }
+    }
+
+    function copierFallback() {
+      const ta = document.createElement("textarea");
+      ta.value = generatedUrl;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand("copy");
+        confirmerCopie();
+      } catch (e) {
+        alert("Copie automatique non disponible. Sélectionnez le lien manuellement.");
+      }
+      document.body.removeChild(ta);
+    }
+
+    function confirmerCopie() {
+      const btn = document.getElementById("copy-btn");
+      btn.textContent = "Copié !";
+      btn.classList.add("copied");
+      setTimeout(() => {
+        btn.textContent = "Copier le lien";
+        btn.classList.remove("copied");
+      }, 2000);
+    }
+
+    function ouvrir() {
+      if (!generatedUrl) return;
+      window.open(generatedUrl, "_blank", "noopener,noreferrer");
+    }
+
+    async function telechargerQR() {
+      if (!window._qrUrl) return;
+      try {
+        const response = await fetch(window._qrUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = window._qrFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        alert("Téléchargement indisponible. Clic droit sur le QR code puis Enregistrer l'image.");
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") generer();
+    });
+  </script>
+</body>
+</html>
