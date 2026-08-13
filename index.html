@@ -65,12 +65,14 @@
       margin-bottom: 20px;
     }
 
-    input[type="text"] {
+    input[type="text"],
+    input[type="date"] {
       width: 100%;
       padding: 10px 14px;
       border: 1.5px solid #ddd;
       border-radius: 8px;
       font-size: 15px;
+      font-family: inherit;
       color: #1a1a1a;
       outline: none;
       transition: border-color 0.15s;
@@ -78,10 +80,19 @@
       background: #fafafa;
     }
 
-    input[type="text"]:focus {
+    input[type="text"]:focus,
+    input[type="date"]:focus {
       border-color: #7c0e73;
       background: #fff;
     }
+
+    .row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .row > div { flex: 1 1 180px; min-width: 0; }
 
     .generate-btn {
       width: 100%;
@@ -241,8 +252,17 @@
     <label for="nom_formation">Nom de la formation</label>
     <input type="text" id="nom_formation" placeholder="Ex : Encadrer, manager une équipe" />
 
-    <label for="date_formation">Date(s) de la formation</label>
-    <input type="text" id="date_formation" placeholder="Ex : 12 mai 2026 ou 12-13 mai 2026" />
+    <div class="row">
+      <div>
+        <label for="date_debut">Date de la formation</label>
+        <input type="date" id="date_debut" />
+      </div>
+      <div>
+        <label for="date_fin">Fin (si plusieurs jours)</label>
+        <input type="date" id="date_fin" />
+      </div>
+    </div>
+    <p class="hint">Laissez la date de fin vide pour une formation d'une seule journée.</p>
 
     <label for="formateur">Formateur / Consultant</label>
     <input type="text" id="formateur" placeholder="Ex : Julie Prak" />
@@ -309,26 +329,74 @@
       manager: "7R0o4Z"
     };
 
-    const CHAMPS = ["numero_session", "nom_formation", "date_formation", "formateur", "lieu_formation"];
+    const CHAMPS_TEXTE = ["numero_session", "nom_formation", "formateur", "lieu_formation"];
+    const CHAMPS_DATE = ["date_debut", "date_fin"];
+    const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin",
+                  "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
     let liens = {};
 
     // Restaure la derniere session saisie
     try {
       const memo = JSON.parse(localStorage.getItem("vakom-session") || "{}");
-      CHAMPS.forEach(c => { if (memo[c]) document.getElementById(c).value = memo[c]; });
+      CHAMPS_TEXTE.concat(CHAMPS_DATE).forEach(c => {
+        if (memo[c]) document.getElementById(c).value = memo[c];
+      });
     } catch (e) {}
 
+    // La date de fin ne peut pas preceder la date de debut
+    const debutRestaure = document.getElementById("date_debut").value;
+    if (debutRestaure) document.getElementById("date_fin").min = debutRestaure;
+
+    document.getElementById("date_debut").addEventListener("change", (e) => {
+      const fin = document.getElementById("date_fin");
+      fin.min = e.target.value;
+      if (fin.value && fin.value < e.target.value) fin.value = "";
+    });
+
+    // "12 mai 2026", "12-13 mai 2026", "30 avril au 2 mai 2026"
+    function libelleDates(debut, fin) {
+      const j = (n) => (n === 1 ? "1er" : String(n));
+      const [ad, md, jd] = debut.split("-").map(Number);
+      if (!fin || fin === debut) return `${j(jd)} ${MOIS[md - 1]} ${ad}`;
+      const [af, mf, jf] = fin.split("-").map(Number);
+      if (ad === af && md === mf) return `${j(jd)}-${j(jf)} ${MOIS[md - 1]} ${ad}`;
+      if (ad === af) return `${j(jd)} ${MOIS[md - 1]} au ${j(jf)} ${MOIS[mf - 1]} ${ad}`;
+      return `${j(jd)} ${MOIS[md - 1]} ${ad} au ${j(jf)} ${MOIS[mf - 1]} ${af}`;
+    }
+
     function generer() {
-      const valeurs = {};
-      for (const c of CHAMPS) {
-        valeurs[c] = document.getElementById(c).value.trim();
-        if (!valeurs[c]) {
-          alert("Merci de remplir les 5 champs avant de générer les liens.");
+      const saisie = {};
+      for (const c of CHAMPS_TEXTE) {
+        saisie[c] = document.getElementById(c).value.trim();
+        if (!saisie[c]) {
+          alert("Merci de remplir tous les champs avant de générer les liens.");
           return;
         }
       }
 
-      try { localStorage.setItem("vakom-session", JSON.stringify(valeurs)); } catch (e) {}
+      const debut = document.getElementById("date_debut").value;
+      const fin = document.getElementById("date_fin").value;
+      if (!debut) {
+        alert("Merci d'indiquer la date de la formation avant de générer les liens.");
+        return;
+      }
+      if (fin && fin < debut) {
+        alert("La date de fin est antérieure à la date de début.");
+        return;
+      }
+
+      const valeurs = {
+        numero_session: saisie.numero_session,
+        nom_formation: saisie.nom_formation,
+        date_formation: libelleDates(debut, fin),
+        formateur: saisie.formateur,
+        lieu_formation: saisie.lieu_formation
+      };
+
+      try {
+        localStorage.setItem("vakom-session",
+          JSON.stringify(Object.assign({}, saisie, { date_debut: debut, date_fin: fin })));
+      } catch (e) {}
 
       const params = new URLSearchParams(valeurs).toString();
       liens = {};
